@@ -1,0 +1,51 @@
+# Smite-AImBotvoid inline Draw2DBox(UCanvas* Canvas, APawn* pTargetPawn)
+	{
+		if( pTargetPawn -> Health > 0 && !pTargetPawn -> bDeleteMe && pTargetPawn != pPlayerController -> Pawn && pTargetPawn -> IsA(ATgPawn_Character::StaticClass()))
+		{
+			FBox Box;
+			pTargetPawn->GetComponentsBoundingBox(&Box);
+ 
+			FVector vpjMax        = WorldToScreen(Canvas, Box.Max);
+			FVector vpjMin        = WorldToScreen(Canvas, Box.Min);
+			FVector vpjCenter    = WorldToScreen(Canvas, pTargetPawn->Location);
+ 
+			float flWidth = fabs((vpjMax.Y - vpjMin.Y) / 4);
+			if(pPlayerController->Pawn->WorldInfo->GRI->OnSameTeam(pTargetPawn,pPlayerController->Pawn))
+			{
+				Canvas->Draw2DLine(vpjCenter.X - flWidth, vpjMin.Y, vpjCenter.X + flWidth, vpjMin.Y, ColorRed); // bottom
+				Canvas->Draw2DLine(vpjCenter.X - flWidth, vpjMax.Y, vpjCenter.X + flWidth, vpjMax.Y, ColorRed); // up
+				Canvas->Draw2DLine(vpjCenter.X - flWidth, vpjMin.Y, vpjCenter.X - flWidth, vpjMax.Y, ColorRed); // left
+				Canvas->Draw2DLine(vpjCenter.X + flWidth, vpjMax.Y, vpjCenter.X + flWidth, vpjMin.Y, ColorRed); // right
+			}
+		}
+	}
+ 
+					Loc = pPlayerController->PlayerCamera->Location;
+					Rot = pPlayerController->PlayerCamera->Rotation;
+ 
+	FVector inline WorldToScreen( UCanvas* Canvas, FVector Location )
+	{
+ 
+		FVector Return;
+ 
+		FVector AxisX, AxisY, AxisZ, Delta, Transformed;
+            
+		Canvas->GetAxes( Rot , &AxisX, &AxisY, &AxisZ );
+    
+    
+		Delta = pPlayerController->Subtract_VectorVector( Location, Loc );
+		Transformed.X = pPlayerController->Dot_VectorVector( Delta, AxisY );
+		Transformed.Y = pPlayerController->Dot_VectorVector( Delta, AxisZ );
+		Transformed.Z = pPlayerController->Dot_VectorVector( Delta, AxisX );
+ 
+		if( Transformed.Z < 1.00f )
+        Transformed.Z = 1.00f;
+ 
+		float FOVAngle = pPlayerController->PlayerCamera->GetFOVAngle();
+		Return.X = ( Canvas->ClipX / 2.0f ) + Transformed.X * ( ( Canvas->ClipX / 2.0f ) / tan( FOVAngle * CONST_Pi / 360.0f ) ) / Transformed.Z;
+		Return.Y = ( Canvas->ClipY / 2.0f ) + -Transformed.Y * ( ( Canvas->ClipX / 2.0f ) / tan( FOVAngle * CONST_Pi / 360.0f ) ) / Transformed.Z;
+		Return.Z = 0;
+ 
+		return Return;
+            
+	}
